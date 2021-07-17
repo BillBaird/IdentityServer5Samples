@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using BlazorServer.Data;
 using Microsoft.AspNetCore.Http;
 using IdentityModel.AspNetCore.AccessTokenManagement;
+using Serilog;
 
 namespace BlazorServer
 {
@@ -34,7 +35,12 @@ namespace BlazorServer
 
             services.AddHttpClient("api_client", configureClient =>
             {
-                configureClient.BaseAddress = new Uri("https://localhost:5002/");
+                configureClient.BaseAddress = new Uri("https://localhost:4999/");
+            });
+
+            services.AddHttpClient("api_client_6001", configureClient =>
+            {
+                configureClient.BaseAddress = new Uri("https://localhost:6001/");
             });
 
             services.AddSingleton<IUserAccessTokenStore, CustomTokenStore>();
@@ -52,9 +58,9 @@ namespace BlazorServer
                 })
                 .AddOpenIdConnect("oidc", options =>
                 {
-                    options.Authority = "https://demo.duendesoftware.com";
+                    options.Authority = "https://localhost:19101";
                     options.ClientId = "interactive.confidential";
-                    options.ClientSecret = "secret";
+                    options.ClientSecret = "bffSecret";
                     options.ResponseType = "code";
                     options.ResponseMode = "query";
 
@@ -65,7 +71,7 @@ namespace BlazorServer
                     options.Scope.Clear();
                     options.Scope.Add("openid");
                     options.Scope.Add("profile");
-                    options.Scope.Add("api");
+                    options.Scope.Add("api1");
                     options.Scope.Add("offline_access");
 
                     options.TokenValidationParameters = new()
@@ -85,6 +91,8 @@ namespace BlazorServer
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseSerilogRequestLogging();
+            
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -106,6 +114,10 @@ namespace BlazorServer
                 endpoints.MapBffManagementEndpoints();
 
                 endpoints.MapBlazorHub();
+                
+                endpoints.MapRemoteBffApiEndpoint("/userinfo", "https://localhost:6001/userinfo")
+                    .RequireAccessToken();
+
                 endpoints.MapFallbackToPage("/_Host");
             });
         }

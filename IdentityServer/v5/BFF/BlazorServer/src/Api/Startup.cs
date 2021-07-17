@@ -19,8 +19,8 @@ namespace Api
             services.AddAuthentication("token")
                 .AddJwtBearer("token", options =>
                 {
-                    options.Authority = "https://demo.duendesoftware.com";
-                    options.Audience = "api";
+                    options.Authority = "https://localhost:19101/";
+                    options.Audience = "api1";
 
                     options.MapInboundClaims = false;
                 });
