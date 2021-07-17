@@ -1,0 +1,74 @@
+@page "/AccessToken"
+@using IdentityModel.AspNetCore.AccessTokenManagement
+@using System.Net.Http.Headers
+@using IdentityModel.Client
+@using System.Net
+
+@inject AuthenticationStateProvider _authenticationStateProvider
+@* @inject IUserAccessTokenManagementService _userAccessTokenManagementService *@
+@inject IUserAccessTokenStore _userAccessTokenStore
+@inject IHttpClientFactory _httpClientFactory
+@inject HttpClient _http
+
+@attribute [Authorize]
+
+<h3>AccessToken</h3>
+
+<div style="margin-left: 20px; max-width: 800px">
+    <AuthorizeView>
+        <Authorized>
+            <dt>Access Token</dt>
+            <dd>@accessToken?.AccessToken</dd>
+            <h5>View decoded token in <a href="https://jwt.ms/#id_token=@accessToken?.AccessToken" target="_blank" rel="noopener noreferrer nofollow">jwt.ms</a></h5>
+            <dt>Expiration</dt>
+            <dd>@accessToken?.Expiration</dd>
+            <dt>Refresh Token</dt>
+            <dd>@accessToken?.RefreshToken</dd>
+            <dt>UserInfo</dt>
+            <dd>@userinfoStr</dd>
+        </Authorized>
+        <NotAuthorized>
+            <a href="bff/login">Log in</a>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+
+    private UserAccessToken accessToken;
+    private string userinfoStr;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // This is how it is demonstrated in WeatherForecastService
+        accessToken = await GetAccessTokenAsync();
+        if (accessToken == null)
+            return;
+        var client = _httpClientFactory.CreateClient("api_client_6001");
+        client.SetBearerToken(accessToken.AccessToken);
+        userinfoStr = await client.GetStringAsync("userinfo");
+        
+        // This does the same thing
+        // _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+        // userinfoStr = await _http.GetStringAsync("https://localhost:6001/userinfo");
+    }
+    
+    private async Task<UserAccessToken> GetAccessTokenAsync()
+    {
+        var state = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        if (!state.User.Identity!.IsAuthenticated)
+            return null;
+        var userAccessToken = await _userAccessTokenStore.GetTokenAsync(state.User);
+        //var token = await _userAccessTokenManagementService.GetUserAccessTokenAsync(state.User);
+        return userAccessToken;
+    }
+
+    private async Task<string> GetUserInfoAsync()
+    {
+        accessToken = await GetAccessTokenAsync();
+        var client = new HttpClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+        var content = await client.GetStringAsync("https://localhost:6001/userinfo");
+        return content;
+    }
+}

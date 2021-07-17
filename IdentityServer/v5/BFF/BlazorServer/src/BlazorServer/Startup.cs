@@ -32,6 +32,8 @@ namespace BlazorServer
             services.AddScoped<WeatherForecastService>();
 
             services.AddBff();
+            // After calling this, you can substitute your own override of any management endpoints.
+            // This could be where we give it a Login Service which registers device information.
 
             services.AddHttpClient("api_client", configureClient =>
             {
@@ -43,6 +45,10 @@ namespace BlazorServer
                 configureClient.BaseAddress = new Uri("https://localhost:6001/");
             });
 
+            // This TokenStore is memory only, relying on a ConcurrentDictionary.  While it works for demo
+            // purposes, it does not scale to multiple instances, nor does it allow for federated use.  It
+            // likely will need a physical backing store.  How is this done with federated login?  It may be
+            // in the cookie (which this is trying to avoid).
             services.AddSingleton<IUserAccessTokenStore, CustomTokenStore>();
 
             services.AddAuthentication(options =>
@@ -72,6 +78,8 @@ namespace BlazorServer
                     options.Scope.Add("openid");
                     options.Scope.Add("profile");
                     options.Scope.Add("api1");
+                    //options.Scope.Add("email");
+                    //options.Scope.Add("kyc");
                     options.Scope.Add("offline_access");
 
                     options.TokenValidationParameters = new()
@@ -82,6 +90,7 @@ namespace BlazorServer
 
                     options.Events.OnTokenValidated = async n => 
                     {
+                        // Save off the Access Token since we may need it later
                         var svc = n.HttpContext.RequestServices.GetRequiredService<IUserAccessTokenStore>();
                         var exp = DateTimeOffset.UtcNow.AddSeconds(Double.Parse(n.TokenEndpointResponse.ExpiresIn));
                         await svc.StoreTokenAsync(n.Principal, n.TokenEndpointResponse.AccessToken, exp, n.TokenEndpointResponse.RefreshToken);

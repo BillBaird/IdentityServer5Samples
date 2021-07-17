@@ -1,0 +1,39 @@
+@page "/Claims"
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@attribute [Authorize]
+
+<h3>Claims</h3>
+
+<div style="margin-left: 20px">
+    <AuthorizeView>
+        <Authorized>
+            @foreach (var claim in @context.User.Claims)
+            {
+                <dt>@claim.Type</dt>
+                <dd>@ConditionalFormat(claim.Type, claim.Value)</dd>
+            }
+        </Authorized>
+        <NotAuthorized>
+            <a href="bff/login">Log in</a>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    private string ConditionalFormat(string type, string value)
+    {
+        switch (type)
+        {
+            case "nbf":
+            case "exp":
+            case "iat":
+            case "auth_time":
+                var unixTime = long.Parse(value);
+                return $"{value} ({DateTimeOffset.FromUnixTimeSeconds(unixTime):yyyy-MM-ddTHH:mm:ssZ})";
+            default:
+                return value;
+        }
+    }
+}
