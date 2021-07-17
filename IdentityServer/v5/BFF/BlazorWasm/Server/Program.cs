@@ -2,6 +2,7 @@
 // See LICENSE in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -14,6 +15,26 @@ namespace Blazor.Server
     {
         public static int Main(string[] args)
         {
+            var logTheme = new AnsiConsoleTheme((IReadOnlyDictionary<ConsoleThemeStyle, string>) new Dictionary<ConsoleThemeStyle, string>()
+            {
+                [ConsoleThemeStyle.Text] = "\x001B[38;5;0232m",
+                [ConsoleThemeStyle.SecondaryText] = "\x001B[38;5;0m",
+                [ConsoleThemeStyle.TertiaryText] = "\x001B[38;5;2m",
+                [ConsoleThemeStyle.Invalid] = "\x001B[33;1m",
+                [ConsoleThemeStyle.Null] = "\x001B[38;5;0038m",
+                [ConsoleThemeStyle.Name] = "\x001B[38;5;4m",
+                [ConsoleThemeStyle.String] = "\x001B[38;5;9m",
+                [ConsoleThemeStyle.Number] = "\x001B[38;5;151m",
+                [ConsoleThemeStyle.Boolean] = "\x001B[38;5;0038m",
+                [ConsoleThemeStyle.Scalar] = "\x001B[38;5;0079m",
+                [ConsoleThemeStyle.LevelVerbose] = "\x001B[38;5;25m",
+                [ConsoleThemeStyle.LevelDebug] = "\x001B[38;5;21m",
+                [ConsoleThemeStyle.LevelInformation] = "\x001B[38;5;21;1m",
+                [ConsoleThemeStyle.LevelWarning] = "\x001B[38;5;0229m",
+                [ConsoleThemeStyle.LevelError] = "\x001B[38;5;0197m\x001B[48;5;0238m",
+                [ConsoleThemeStyle.LevelFatal] = "\x001B[38;5;0197m\x001B[48;5;0238m"
+            });
+            
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -22,7 +43,7 @@ namespace Blazor.Server
                 .MinimumLevel.Override("IdentityModel", LogEventLevel.Debug)
                 .MinimumLevel.Override("Duende.Bff", LogEventLevel.Debug)
                 .Enrich.FromLogContext()
-                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: AnsiConsoleTheme.Code)
+                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: logTheme)
                 .CreateLogger();
 
             try

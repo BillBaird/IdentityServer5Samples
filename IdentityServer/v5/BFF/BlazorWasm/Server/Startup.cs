@@ -42,11 +42,11 @@ namespace Blazor.Server
                 })
                 .AddOpenIdConnect("oidc", options =>
                 {
-                    options.Authority = "https://demo.duendesoftware.com";
+                    options.Authority = "https://localhost:19101/";
                     
                     // confidential client using code flow + PKCE
                     options.ClientId = "interactive.confidential";
-                    options.ClientSecret = "secret";
+                    options.ClientSecret = "bffSecret";
                     options.ResponseType = "code";
                     options.ResponseMode = "query";
 
@@ -58,7 +58,7 @@ namespace Blazor.Server
                     options.Scope.Clear();
                     options.Scope.Add("openid");
                     options.Scope.Add("profile");
-                    options.Scope.Add("api");
+                    options.Scope.Add("api1");
                     options.Scope.Add("offline_access");
                 });
         }
@@ -99,7 +99,9 @@ namespace Blazor.Server
                     .AsBffApiEndpoint();
                 
                 // remote API
-                endpoints.MapRemoteBffApiEndpoint("/remote", "https://demo.duendesoftware.com/api/test")
+                // endpoints.MapRemoteBffApiEndpoint("/remote", "https://demo.duendesoftware.com/api/test")
+                //     .RequireAccessToken();
+                endpoints.MapRemoteBffApiEndpoint("/remote", "https://localhost:6001/identity")
                     .RequireAccessToken();
                 
                 endpoints.MapFallbackToFile("index.html");
