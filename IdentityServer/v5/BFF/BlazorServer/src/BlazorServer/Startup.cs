@@ -66,7 +66,7 @@ namespace BlazorServer
             // purposes, it does not scale to multiple instances, nor does it allow for federated use.  It
             // likely will need a physical backing store.  How is this done with federated login?  It may be
             // in the cookie (which this is trying to avoid).
-            services.AddSingleton<IUserAccessTokenStore, CustomTokenStore>();
+            services.AddSingleton<IUserAccessTokenStore, SqliteTokenStore>();
 
             // configure server-side authentication and session management
             services.AddAuthentication(options =>
