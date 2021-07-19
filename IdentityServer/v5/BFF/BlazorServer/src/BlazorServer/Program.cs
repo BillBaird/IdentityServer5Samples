@@ -39,7 +39,9 @@ namespace BlazorServer
                 .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
                 .MinimumLevel.Override("Microsoft.AspNetCore.Authentication", LogEventLevel.Information)
                 .MinimumLevel.Override("IdentityModel", LogEventLevel.Debug)
-                .MinimumLevel.Override("Duende.Bff", LogEventLevel.Debug)
+                .MinimumLevel.Override("Duende.Bff", LogEventLevel.Verbose)
+                .MinimumLevel.Override("BlazorServer", LogEventLevel.Verbose)
+                .MinimumLevel.Override("BlazorServer.BffServiceOverrides", LogEventLevel.Verbose)
                 .Enrich.FromLogContext()
                 .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss.ffff} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: logTheme)
                 .CreateLogger();
