@@ -143,7 +143,7 @@ namespace BlazorServer
                         refreshToken CHAR(64));                 
                         ";
             await command.ExecuteNonQueryAsync();
-            _logger.LogInformation("Sqlite TokenStore created");
+            _logger.LogTrace("Sqlite TokenStore opened");
         }
         
         public void Dispose()

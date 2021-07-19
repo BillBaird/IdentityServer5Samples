@@ -3,12 +3,15 @@
 @using System.Net.Http.Headers
 @using IdentityModel.Client
 @using System.Net
+@using Microsoft.Extensions.Logging
 
 @inject AuthenticationStateProvider _authenticationStateProvider
 @* @inject IUserAccessTokenManagementService _userAccessTokenManagementService *@
 @inject IUserAccessTokenStore _userAccessTokenStore
 @inject IHttpClientFactory _httpClientFactory
 @inject HttpClient _http
+@inject ILogger<AccessToken> _logger
+@inject NavigationManager _navigationManager
 
 @attribute [Authorize]
 
@@ -21,7 +24,7 @@
             <dd>@accessToken?.AccessToken</dd>
             <h5>View decoded token in <a href="https://jwt.ms/#id_token=@accessToken?.AccessToken" target="_blank" rel="noopener noreferrer nofollow">jwt.ms</a></h5>
             <dt>Expiration</dt>
-            <dd>@accessToken?.Expiration</dd>
+            <dd>@accessToken?.Expiration (@accessToken?.Expiration!.Value!.ToLocalTime())</dd>
             <dt>Refresh Token</dt>
             <dd>@accessToken?.RefreshToken</dd>
             <dt>UserInfo</dt>
@@ -46,11 +49,21 @@
             return;
         var client = _httpClientFactory.CreateClient("api_client_6001");
         client.SetBearerToken(accessToken.AccessToken);
-        userinfoStr = await client.GetStringAsync("userinfo");
-        
-        // This does the same thing
-        // _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
-        // userinfoStr = await _http.GetStringAsync("https://localhost:6001/userinfo");
+        try
+        {
+            userinfoStr = await client.GetStringAsync("userinfo");
+
+            // This does the same thing
+            // _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+            // userinfoStr = await _http.GetStringAsync("https://localhost:6001/userinfo");
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _logger.LogWarning("AccessToken page got 401 (Unauthorized)");
+            var state = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var sid = state.User.FindFirst("sid");
+            _navigationManager.NavigateTo(sid is null ? "/bff/logout" : $"/bff/logout?sid={sid.Value}");
+        }
     }
     
     private async Task<UserAccessToken> GetAccessTokenAsync()
