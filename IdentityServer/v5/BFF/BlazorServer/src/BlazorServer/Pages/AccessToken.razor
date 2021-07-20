@@ -72,7 +72,6 @@
         if (!state.User.Identity!.IsAuthenticated)
             return null;
         var userAccessToken = await _userAccessTokenStore.GetTokenAsync(state.User);
-        //var token = await _userAccessTokenManagementService.GetUserAccessTokenAsync(state.User);
         return userAccessToken;
     }
 
